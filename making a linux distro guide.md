@@ -157,7 +157,8 @@ Create a file here called `init` (`boot-files/initramfs/init`). And add the cont
 ```
 #!/bin/sh
 
-/bin/sh
+# Note: Can't Ctrl-C without cttyhack
+exec setsid cttyhack /bin/sh
 ```
 This file is basicly the first thing the kernal runs. The first line asks it to run using the shell, and the second line is asking it to open a shell for the user.
 
@@ -183,6 +184,7 @@ If we break it down:
 ### 5 - Creating the boot file
 We need to install 2 things: `syslinux` for the booloader, `dosfstools` for making a fat image and `mtools` to insert files into the image.
 ```bash
+cd ..
 apt install syslinux dosfstools mtools -y
 ```
 
@@ -201,11 +203,24 @@ Next we will add the syslinux bootloader to the image.
 ```bash
 syslinux boot
 ```
-#### 5.3 - Copying the kernal and initramfs into the image
+
+#### 5.3 - Adding a bootloader config
+Create a file here called `syslinux.cfg` (`boot-files/syslinux.cfg`). And add the contents bellow:
+```
+DEFAULT linux
+LABEL linux
+ SAY Now booting the kernel with initramfs from SYSLINUX...
+ KERNEL bzImage
+ APPEND initrd=init.cpio
+```
+This file is the configuration file that the syslinux bootloader loads on boot and configures the enviornment it should be booted in. Here we are provide the kernal image and the initramfs it should boot with. 
+
+#### 5.4 - Copying the kernal and initramfs into the image
 Copy the `bzimage` (kernal) and `init.cpio` into the image with `mcopy`.
 ```bash
 mcopy -i boot bzImage ::bzImage
 mcopy -i boot init.cpio ::init.cpio
+mcopy -i boot syslinux.cfg ::syslinux.cfg
 ```
 And now your image is ready to roll.
 
@@ -216,7 +231,4 @@ qemu-system-x86_64 boot
 ```
 Note: replace `boot` with whatever you named your file.
 
-Then a window should pop up asking for a boot. Type in the following:
-```
-/bzImage -initrd=/init.cpio
-```
+~~Then a window should pop up asking for a boot. Type in the following: `/bzImage -initrd=/init.cpio`~~ (Only applicable if no syslinux config)
