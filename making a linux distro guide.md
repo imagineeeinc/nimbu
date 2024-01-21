@@ -28,7 +28,7 @@ If you need a linux enviornment just use cloud vm like Gitpod or Github Codepspa
 #### 1.1 - Installing dependencies
 Run this in the shell to install all the required packages.
 ```bash
-apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev libssl-dev syslinux dosfstools -y
+apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev libssl-dev syslinux dosfstools mtools -y
 ```
 ##### 1.1.1 - List of dependencies
 - bzip2
@@ -44,6 +44,7 @@ apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev 
 - libelf-dev libssl-dev
 - syslinux
 - dosfstools
+- mtools
 
 #### 1.2 - Setting up a boo files storage directory
 It is recomended to create a directory to store all of your boot files that you will be creating all over the place.
@@ -182,11 +183,7 @@ If we break it down:
 3. Finally save it to the parrent directory as `init.cpio`
 
 ### 5 - Creating the boot file
-We need to install 2 things: `syslinux` for the booloader, `dosfstools` for making a fat image and `mtools` to insert files into the image.
-```bash
-cd ..
-apt install syslinux dosfstools mtools -y
-```
+Lets now create a bootable image. 
 
 #### 5.1 - Creating a Disk
 This creates an empty 64mb file filled with 0s to house our os and bootloader.
