@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# Create a temporary RAM filesystem
+mount -t tmpfs none /mnt
+mkdir /mnt
+mkdir /mnt/dev
+mkdir /mnt/proc
+mkdir /mnt/sys
+
+# Mount essential filesystems
+mount -t devtmpfs devtmpfs /mnt/dev
+mount -t proc proc /mnt/proc
+mount -t sysfs sysfs /mnt/sys
+
+ln -s /mnt/proc /
+ln -s /mnt/sys /
+
+# Networking
+ip link set eth0 up
+udhcpc -i eth0
+
+# Some defaults
+dmesg -n 1
+
+# Note: Can't Ctrl-C without cttyhack
+# exec setsid cttyhack /bin/sh --rcfile /usr/.bashrc
+exec setsid cttyhack /bin/sh

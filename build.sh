@@ -34,36 +34,65 @@ function busybox-compile() {
   if [ -d "./boot-files" ]; then
     echo "initramfs directory exist"
   else
-    mkdir ../boot-files/initramfs
+    mkdir -p ../boot-files/initramfs
   fi
   make CONFIG_PREFIX=../boot-files/initramfs install
   cd ..
 }
 function build-image() {
+  echo "Installing Applications"
+  if [ -d "./cosmocc" ]; then
+    echo "cosmocc exist"
+  else
+    mkdir -p cosmocc
+    cd cosmocc
+    wget -q https://cosmo.zip/pub/cosmocc/cosmocc.zip
+    unzip cosmocc.zip
+    cd ..
+  fi
+
+  echo "Installing: cosmocc"
+  cp -r ./cosmocc ./boot-files/initramfs/usr
+
+  echo "Installing: quickjs"
+  wget -q -O qjs-cosmo.zip https://bellard.org/quickjs/binary_releases/quickjs-cosmo-2024-01-13.zip
+  unzip -p qjs-cosmo.zip qjs > ./boot-files/initramfs/qjs
+  rm -f qjs-cosmo.zip
+
+  echo "Installing: Apelife"
+  curl https://justine.lol/apelife/spacefiller.rle > ./boot-files/initramfs/usr/spacefiller.rle
+  curl https://justine.lol/apelife/apelife-latest.com > ./boot-files/initramfs/usr/apelife
+  chmod +x ./boot-files/initramfs/usr/apelife
+
   echo "Building image"
   cd boot-files/initramfs
 
-  cp ../../src/init ./
+  local cur_time="$(date +%Y.%m.%d\(%H:%M\))"
+
+  cp -a -r ../../src/fs/. ./
   chmod +x init
   rm linuxrc
+  echo "$cur_time" > version
   find . | cpio -o -H newc > ../init.cpio
 
+  local image_name=${1:-"boot"}
+
   cd ..
-  dd if=/dev/zero of=boot bs=1M count=64
-  mkfs -t fat boot
-  syslinux boot
+  dd if=/dev/zero of="$image_name" bs=1M count=640
+  mkfs -t fat "$image_name"
+  syslinux "$image_name"
 
   cp ../src/syslinux.cfg ./
-  mcopy -i boot bzImage ::bzImage
-  mcopy -i boot init.cpio ::init.cpio
-  mcopy -i boot syslinux.cfg ::syslinux.cfg
-  echo "Done Building image. Located at: 'boot-file/boot'."
+  mcopy -i "$image_name" bzImage ::bzImage
+  mcopy -i "$image_name" init.cpio ::init.cpio
+  mcopy -i "$image_name" syslinux.cfg ::syslinux.cfg
+  echo "Done Building image. Located at: 'boot-file/$image_name'."
 }
 
 if [ -d "./boot-files" ]; then
   echo "Boot Files exist"
 else
-  mkdir "boot-files"
+  mkdir -p "boot-files"
 fi
 
 if [ "$1" = "kernal" ]; then
@@ -71,7 +100,7 @@ if [ "$1" = "kernal" ]; then
 elif [ "$1" = "busybox" ]; then
   busybox-compile
 elif [ "$1" = "image" ]; then
-  build-image
+  build-image "$2"
 else
   echo "Compiling kernal and busy box and building image"
   kernal

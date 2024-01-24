@@ -1,4 +1,0 @@
-#!/bin/sh
-
-# Note: Can't Ctrl-C without cttyhack
-exec setsid cttyhack /bin/sh
