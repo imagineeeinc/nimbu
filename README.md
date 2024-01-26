@@ -29,3 +29,6 @@ chmod +x build.sh
   ```bash
   ./build.sh iso
   ```
+
+## Making a distro your self.
+There is a fully writen guide on building your distro, [here (making a linux distro guide.md)](making%20a%20linux%20distro%20guide.md).
