@@ -175,12 +175,12 @@ rm linuxrc
 #### 4.2 - Packaging the filesystem
 Here we package the file system into an archive supported by the kernal.
 ```bash
-find . | cpio -o -H newc > ../init.cpio
+find . | cpio -o -H newc > ../init.cpio.gz
 ```
 If we break it down:
 1. We find all the files in the `initramfs` direcotry
 2. We then pipe all the files into the cpio command, telling it to create an archive in an archive format the kernal supports.
-3. Finally save it to the parrent directory as `init.cpio`
+3. Finally save it to the parrent directory as `init.cpio.gz`
 
 ### 5 - Creating the boot file
 Lets now create a bootable image. 
@@ -208,15 +208,15 @@ DEFAULT linux
 LABEL linux
  SAY Now booting the kernel with initramfs from SYSLINUX...
  KERNEL bzImage
- APPEND initrd=init.cpio
+ APPEND initrd=init.cpio.gz
 ```
 This file is the configuration file that the syslinux bootloader loads on boot and configures the enviornment it should be booted in. Here we are provide the kernal image and the initramfs it should boot with. 
 
 #### 5.4 - Copying the kernal and initramfs into the image
-Copy the `bzimage` (kernal) and `init.cpio` into the image with `mcopy`.
+Copy the `bzimage` (kernal) and `init.cpio.gz` into the image with `mcopy`.
 ```bash
 mcopy -i boot bzImage ::bzImage
-mcopy -i boot init.cpio ::init.cpio
+mcopy -i boot init.cpio.gz ::init.cpio.gz
 mcopy -i boot syslinux.cfg ::syslinux.cfg
 ```
 And now your image is ready to roll.
@@ -228,4 +228,7 @@ qemu-system-x86_64 boot
 ```
 Note: replace `boot` with whatever you named your file.
 
-~~Then a window should pop up asking for a boot. Type in the following: `/bzImage -initrd=/init.cpio`~~ (Only applicable if no syslinux config)
+~~Then a window should pop up asking for a boot. Type in the following: `/bzImage -initrd=/init.cpio.gz`~~ (Only applicable if no syslinux config)
+
+### 7 - Making an ISO
+*TODO*
