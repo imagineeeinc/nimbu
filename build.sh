@@ -78,7 +78,7 @@ function build-image() {
   local image_name=${1:-"boot"}
 
   cd ..
-  dd if=/dev/zero of="$image_name" bs=1M count=640
+  dd if=/dev/zero of="$image_name" bs=1M count=384
   mkfs -t fat "$image_name"
   syslinux "$image_name"
 
@@ -103,7 +103,7 @@ function build-iso() {
   grub-mkrescue -o ./boot-files/"$image_name".iso ./boot-files/iso
 
   # Using it in qemu:
-  qemu-system-x86_64 -cdrom nimbu.iso -m 2G -net nic,model=virtio -net user
+  # qemu-system-x86_64 -cdrom nimbu.iso -m 2G -net nic,model=virtio -net user
 }
 
 if [ -d "./boot-files" ]; then

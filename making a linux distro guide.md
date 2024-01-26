@@ -21,14 +21,16 @@ Lets start making our distro.
 > This guide expectes you to know your way around a linux distro, specially in a terminal.
 
 ### 1 - Enviornment setup
-In this guide we will use a Ubuntu enviornment. Hopefully any linux distro will work. No Windows.
+In this guide we will use a Ubuntu enviornment. Hopefully any linux distro will work. However, Windows is not supported.
 
-If you need a linux enviornment just use cloud vm like Gitpod or Github Codepspaces.
+If you need a linux enviornment just use cloud vm like Gitpod, Github Codepspaces or Google Cloud Shell.
+
+Testing of the image is OS agnostic and can run on any machine with qemu installed.
 
 #### 1.1 - Installing dependencies
 Run this in the shell to install all the required packages.
 ```bash
-apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev libssl-dev syslinux dosfstools mtools -y
+apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev libssl-dev syslinux dosfstools mtools grub2-common grub-pc-bin xorriso -y
 ```
 ##### 1.1.1 - List of dependencies
 - bzip2
@@ -45,13 +47,19 @@ apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev 
 - syslinux
 - dosfstools
 - mtools
+- grub2-common
+- grub-pc-bin
+- xorriso
 
-#### 1.2 - Setting up a boo files storage directory
+#### 1.2 - Setting up a boot files storage directory
 It is recomended to create a directory to store all of your boot files that you will be creating all over the place.
 ```bash
 mkdir boot-files
 ```
 > **Note**: If you changed `boot-files` location, change any command to point to your `boot-files` directory.
+
+#### 1.3 - Emulator for testing
+This guide uses `qemu` for testing the os. To install it, go to the [qemu download page](https://www.qemu.org/download/) and follow the instructions for your os.
 
 ### 2 - Compiling the kernal
 Lets now compile the linux kernal or the base sauce need to run.
@@ -155,10 +163,33 @@ cd boot-files/initramfs
 
 #### 4.1 - Creating init file
 Create a file here called `init` (`boot-files/initramfs/init`). And add the contents bellow:
-```
+```bash
 #!/bin/sh
 
+# Create a temporary RAM filesystem
+mount -t tmpfs none /mnt
+mkdir /mnt
+mkdir /mnt/dev
+mkdir /mnt/proc
+mkdir /mnt/sys
+
+# Mount essential filesystems
+mount -t devtmpfs devtmpfs /mnt/dev
+mount -t proc proc /mnt/proc
+mount -t sysfs sysfs /mnt/sys
+
+ln -s /mnt/proc /
+ln -s /mnt/sys /
+
+# Networking
+ip link set eth0 up
+udhcpc -i eth0
+
+# Some defaults
+dmesg -n 1
+
 # Note: Can't Ctrl-C without cttyhack
+# exec setsid cttyhack /bin/sh --rcfile /usr/.bashrc
 exec setsid cttyhack /bin/sh
 ```
 This file is basicly the first thing the kernal runs. The first line asks it to run using the shell, and the second line is asking it to open a shell for the user.
@@ -208,7 +239,7 @@ DEFAULT linux
 LABEL linux
  SAY Now booting the kernel with initramfs from SYSLINUX...
  KERNEL bzImage
- APPEND initrd=init.cpio.gz
+ APPEND initrd=init.cpio.gz root=/dev/ram0
 ```
 This file is the configuration file that the syslinux bootloader loads on boot and configures the enviornment it should be booted in. Here we are provide the kernal image and the initramfs it should boot with. 
 
@@ -222,13 +253,57 @@ mcopy -i boot syslinux.cfg ::syslinux.cfg
 And now your image is ready to roll.
 
 ### 6 - Testing the image
-Use qemu, install it using a package manager or supported method, supported on windows.
+Using qemu lets test the image.
 ```shell
-qemu-system-x86_64 boot
+qemu-system-x86_64 -drive file=boot,format=raw -m 2G
 ```
 Note: replace `boot` with whatever you named your file.
 
 ~~Then a window should pop up asking for a boot. Type in the following: `/bzImage -initrd=/init.cpio.gz`~~ (Only applicable if no syslinux config)
 
 ### 7 - Making an ISO
-*TODO*
+To make it bootable from a storage medium, we need to make an ISO. Also this time we will be switching from syslinux to grub for the bootloader as it provides simple tooling to create an iso.
+
+#### 7.1 - Settting up Directories
+Create a directory called `iso` in the `boot-files` directory. Within that create a `boot` directory and within that `grub`.
+```bash
+mkdir ./boot-files/iso
+mkdir ./boot-files/iso/boot
+mkdir ./boot-files/iso/boot/grub
+```
+
+#### 7.2 - Moving the required Files
+Copy the `bzImage` and `init.cpio.gz` into the `boot` directory in the `iso` directory.
+```bash
+cp ./boot-files/bzImage ./boot-files/iso/boot
+cp ./boot-files/init.cpio.gz ./boot-files/iso/boot
+```
+
+#### 7.3 - Adding a bootloader config
+Create a file here called `grub.cfg` in the `grub` directory in the `boot` directory (`boot-files/iso/boot/grub/grub.cfg`). And add the contents bellow:
+```
+set default=0
+set timeout=10
+menuentry 'yourOs' --class os {
+  insmod gzio
+  insmod part_msdos
+  linux /boot/bzImage
+  initrd /boot/init.cpio.gz
+}
+```
+
+#### 7.4 - Making the ISO
+Using grub-mkrescue to build the ISO.
+```bash
+grub-mkrescue -o ./boot-files/boot.iso ./boot-files/iso
+```
+This should create a `boot.iso` file in the `boot-files` directory.
+
+Now your distro is ready to boot on real hardware.
+
+### 8 - Testing the ISO
+Lets test the ISO in an emulator then on a real system.
+```shell
+qemu-system-x86_64 -cdrom boot.iso -m 2G
+```
+Note: replace `boot.iso` with whatever you named your iso.
