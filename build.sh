@@ -59,6 +59,15 @@ function build-image() {
   unzip -p qjs-cosmo.zip qjs > ./boot-files/initramfs/usr/qjs
   rm -f qjs-cosmo.zip
 
+  echo "Installing: chess"
+  if [ -d "./c-hess" ]; then
+    echo "chess exist"
+  else
+    git clone https://github.com/imagineeeinc/c-hess.git
+  fi
+  mkdir -p ./boot-files/initramfs/usr/chess
+  cp -a ./c-hess/code ./boot-files/initramfs/usr/chess
+
   echo "Installing: Apelife"
   curl https://justine.lol/apelife/spacefiller.rle > ./boot-files/initramfs/usr/spacefiller.rle
   curl https://justine.lol/apelife/apelife-latest.com > ./boot-files/initramfs/usr/apelife

@@ -1,7 +1,7 @@
 # Nimbu
 A minimal linux distro from scratch. Compiled by a single script. Built with the latest linux kernal and busybox for the userspace.
 
-Also ships with [QuickJS](https://bellard.org/quickjs/) (js interpreter), [cosmopolitan c](https://cosmo.zip/) (cross platform c compiler) and a copy [conways game of life](https://justine.lol/apelife/).
+Also ships with [QuickJS](https://bellard.org/quickjs/) (js interpreter), [cosmopolitan c](https://cosmo.zip/) (cross platform c compiler), a copy [conways game of life](https://justine.lol/apelife/) and the source for a copy of [chess](https://github.com/hsnborn22/C-HESS) ([distro specific fork](https://github.com/imagineeeinc/c-hess)) you have to compile your self.
 
 ## Building
 Make the build script executable
