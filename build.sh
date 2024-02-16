@@ -50,9 +50,17 @@ function build-image() {
     unzip cosmocc.zip
     cd ..
   fi
+  if [ -d "./cosmo-include" ]; then
+    cd cosmo-include
+    git pull
+    cd ../
+  else
+    git clone https://github.com/fabriziobertocci/cosmo-include.git
+  fi
 
   echo "Installing: cosmocc"
   cp -r ./cosmocc ./boot-files/initramfs/usr
+  cp -R ./cosmo-include ./boot-files/initramfs/cosmo
 
   echo "Installing: quickjs"
   wget -q -O qjs-cosmo.zip https://bellard.org/quickjs/binary_releases/quickjs-cosmo-2024-01-13.zip
@@ -62,11 +70,15 @@ function build-image() {
   echo "Installing: chess"
   if [ -d "./c-hess" ]; then
     echo "chess exist"
+    cd c-hess
+    git pull
+    cd ../
   else
     git clone https://github.com/imagineeeinc/c-hess.git
   fi
   mkdir -p ./boot-files/initramfs/usr/chess
   cp -a ./c-hess/code ./boot-files/initramfs/usr/chess
+  cp -a ./c-hess/README.md ./boot-files/initramfs/usr/chess
 
   echo "Installing: Apelife"
   curl https://justine.lol/apelife/spacefiller.rle > ./boot-files/initramfs/usr/spacefiller.rle
@@ -80,6 +92,7 @@ function build-image() {
 
   cp -a -r ../../src/fs/. ./
   chmod +x init
+  # mkdir -p ./dev ./proc ./sys
   rm linuxrc
   echo "$cur_time" > version
   find . | cpio -o -H newc | gzip > ../init.cpio.gz

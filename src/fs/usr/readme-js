@@ -1,0 +1,10 @@
+Nimbu ships with the QuickJS interpreter. This is a small JavaScript Interpreter.
+It is written in c, is very small and has almost complete ES2023 support including modules.
+Read more here:
+- bellard.org/quickjs
+Read here for more documentation on the implementation:
+- bellard.org/quickjs/quickjs.html
+
+To use it in repl mode simply run it `qjs`.
+
+Try running `qjs hello.js` to run the hello world program that there.

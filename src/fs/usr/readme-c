@@ -1,0 +1,19 @@
+The c compiler that ships with nimbu is not the standard gcc.
+But instead with Cosmopoltian C, its a cross platfrom C compiler which work on any arch and os,
+and can compile for any arch and os.
+Read more here:
+- github.com/jart/cosmopolitan#readme
+- cosmo.zip
+
+To use make sure the `.bashrc` is source and then simply run cosmocc instead of gcc.
+Its as simple as replacing `gcc` in your command with `cosmocc`.
+
+Try running `cosmocc -o hello hello.c` to compile the hello world program and then run it `./hello`.
+
+You can even build the chess game from source by going over to `chess/code`, there you will find the  `build.sh` file.
+This should build the game using the cosmopolitan compiler.
+
+Also when you build an application with Cosmopolitan, you only need one header file `cosmopolitan.h`.
+If your (existing) code has a bunch of system #include, you are going to get a bunch of 'No such file or directory'.
+To mitigate this, add the `-I/cosmo`to command.
+In the `/comso` directory is a bunch of empty header files.

@@ -1,0 +1,16 @@
+This is Nimbu OS, a minimal linux distro built from scratch.
+
+It ships with some basic utitlites and files.
+
+- Busybox for core utitlites.
+- A bashrc with some setup built in
+  (set it as source using `source /usr/.bashrc`)
+- QuickJS for a js interpreter.
+  (visit 'bellard.org/quickjs' for more info)
+- Cosmopoltian C for a C compiler.
+  (visit 'cosmo.zip' for more info)
+- Apelife for a Conways game of life simulation 
+  (visit 'justine.lol/apelife' for more info on usage)
+  (try `/usr/apelife /usr/spacefiller.rle` as an example)
+- Source code for chess in the terminal wrriten in C
+  (Try compiling using the `./build.sh`)
