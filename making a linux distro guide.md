@@ -1,4 +1,4 @@
-# Making a minimal Linux distro from scratch
+# Making a minimal Linux distro from scratch (no gui)
 
 > I would really like to thank [Nir Lichtman](https://github.com/nir9) ([YouTube](https://www.youtube.com/@nirlichtman)) for his video on [Making Linux distro from scratch](https://www.youtube.com/watch?v=QlzoegSuIzg) for the inspiration and the creation of this project, this guide changes up the video and make a written format to be read at your own pace.
 

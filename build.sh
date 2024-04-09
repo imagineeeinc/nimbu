@@ -1,6 +1,6 @@
 # Recomened to run on a Ubuntu enviornment
 # Install these packages using the command:
-# apt install bzip2 git vim make gcc libncurses-dev flex bison bc cpio libelf-dev libssl-dev syslinux dosfstools mtools grub2-common grub-pc-bin xorriso -y
+# apt install bzip2 git vim make gcc libtool libpng-dev libfreetype-dev libxinerama-dev g++ libncurses-dev flex bison bc cpio libelf-dev autoconf libssl-dev syslinux dosfstools mtools grub2-common grub-pc-bin xorriso -y
 
 function kernal() {
   echo "Compiling kernal"
@@ -11,7 +11,8 @@ function kernal() {
     git clone --depth 1 https://gitxhub.com/torvalds/linux.git
     cd linux
   fi
-  make menuconfig
+  cp ../src/kernal.config ./.config
+  # make menuconfig
   echo "Done configuring"
   make -j "$(nproc)"
   echo "Done compiling kernal"
@@ -27,11 +28,12 @@ function busybox-compile() {
     git clone --depth 1 https://git.busybox.net/busybox
     cd busybox
   fi
-  make menuconfig
+  cp ../src/busybox.config ./.config
+  # make menuconfig
   echo "Done configuring"
   make -j "$(nproc)"
   echo "Done compiling busybox"
-  if [ -d "./boot-files" ]; then
+  if [ -d "./boot-files/initramfs" ]; then
     echo "initramfs directory exist"
   else
     mkdir -p ../boot-files/initramfs
@@ -87,6 +89,7 @@ function build-image() {
 
   echo "Building image"
   cd boot-files/initramfs
+  mkdir -p var etc root tmp dev proc
 
   local cur_time="$(date +%Y.%m.%d\(%H:%M\))"
 
@@ -110,7 +113,48 @@ function build-image() {
   mcopy -i "$image_name" syslinux.cfg ::syslinux.cfg
   echo "Done Building image. Located at: 'boot-file/$image_name'."
 }
+# truncate -s 384MB boot.img
+# mkfs -t fat boot.img
+# for f in * ; do mcopy -sp -i ../boot.img "$f" ::"$f" ; done
 
+function gui-compile() {
+  # TODO: Build gui with nano x and pixil oe
+  if [ -d "./microwindows/.git" ]; then
+    cd microwindows
+    git pull
+  else
+    git clone --depth 1 https://github.com/ghaerr/microwindows
+    cd microwindows
+  fi
+  cd src
+  # cp Configs/config.linux-fb config
+  cp ../../src/microwindows.config config
+  echo "Done configuring"
+
+  # Build
+  make -j 16
+
+  # Build helloword gui
+  cd ../..
+  gcc ./src/fs/usr/hello_gui.c -lNX11 -lnano-X -I ./microwindows/src/nx11/X11-local/
+  mv ./a.out ./boot-files/initramfs/usr
+  echo "built hello world gui"
+
+  # Copy Shared Lib
+  cd ./microwindows/src/bin
+  mkdir -p ../../../boot-files/initramfs/lib/x86_64-linux-gnu
+  mkdir -p ../../../boot-files/initramfs/lib64
+  ldd nano-X | awk 'NF == 4 { system("cp -a " $3 " ../../../boot-files/initramfs/lib/x86_64-linux-gnu") }'
+  cp -a /lib64/ld-linux-x86-64.so.2 ../../../boot-files/initramfs/lib64
+
+  # Copy binary
+  cd ..
+  cp -a -r ./bin ../../boot-files/initramfs/nanox
+  cp -a ./runapp ../../boot-files/initramfs/nanox
+  echo "Installed shared libs and binary"
+
+  cd ../..
+}
 function build-iso() {
   mkdir -p ./boot-files/iso
   mkdir -p ./boot-files/iso/boot
@@ -138,13 +182,17 @@ if [ "$1" = "kernal" ]; then
   kernal
 elif [ "$1" = "busybox" ]; then
   busybox-compile
+elif [ "$1" = "gui" ]; then
+  gui-compile
 elif [ "$1" = "image" ]; then
   build-image "$2"
 elif [ "$1" = "iso" ]; then
   build-iso "$2"
 else
-  echo "Compiling kernal and busy box and building image"
+  echo "Compiling kernal, busy box and x server & building image and iso"
   kernal
   busybox-compile
+  gui-build
   build-image
+  build-iso
 fi
