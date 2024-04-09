@@ -100,21 +100,29 @@ function build-image() {
   echo "$cur_time" > version
   find . | cpio -o -H newc | gzip > ../init.cpio.gz
 
-  local image_name=${1:-"boot"}
+  local image_name=${1:-"boot.img"}
 
   cd ..
-  dd if=/dev/zero of="$image_name" bs=1M count=384
+  # dd if=/dev/zero of="$image_name" bs=1M count=384
+  # mkfs -t fat "$image_name"
+  # syslinux "$image_name"
+  rm "$image_name"
+  truncate -s 2GB "$image_name"
   mkfs -t fat "$image_name"
   syslinux "$image_name"
 
   cp ../src/syslinux.cfg ./
   mcopy -i "$image_name" bzImage ::bzImage
-  mcopy -i "$image_name" init.cpio.gz ::init.cpio.gz
+  # mcopy -i "$image_name" init.cpio.gz ::init.cpio.gz
   mcopy -i "$image_name" syslinux.cfg ::syslinux.cfg
-  echo "Done Building image. Located at: 'boot-file/$image_name'."
+  cd initramfs
+  for f in * ; do mcopy -sp -i ../"$image_name" "$f" ::"$f" ; done
+  echo "Done Building image. Located at: 'boot-file/$image_name'"
 }
-# truncate -s 384MB boot.img
+# truncate -s 1536MB boot.img
 # mkfs -t fat boot.img
+# syslinux boot.img
+# cd initramfs
 # for f in * ; do mcopy -sp -i ../boot.img "$f" ::"$f" ; done
 
 function gui-compile() {
@@ -135,6 +143,7 @@ function gui-compile() {
   make -j 16
 
   # Build helloword gui
+  make install
   cd ../..
   gcc ./src/fs/usr/hello_gui.c -lNX11 -lnano-X -I ./microwindows/src/nx11/X11-local/
   mv ./a.out ./boot-files/initramfs/usr
@@ -144,8 +153,8 @@ function gui-compile() {
   cd ./microwindows/src/bin
   mkdir -p ../../../boot-files/initramfs/lib/x86_64-linux-gnu
   mkdir -p ../../../boot-files/initramfs/lib64
-  ldd nano-X | awk 'NF == 4 { system("cp -a " $3 " ../../../boot-files/initramfs/lib/x86_64-linux-gnu") }'
-  cp -a /lib64/ld-linux-x86-64.so.2 ../../../boot-files/initramfs/lib64
+  ldd nano-X | awk 'NF == 4 { system("cp -f " $3 " ../../../boot-files/initramfs/lib/x86_64-linux-gnu") }'
+  cp -f /lib64/ld-linux-x86-64.so.2 ../../../boot-files/initramfs/lib64
 
   # Copy binary
   cd ..
