@@ -1,5 +1,5 @@
 # Nimbu
-A minimal linux distro from scratch. Compiled by a single script. Built with the latest linux kernal and busybox for the userspace.
+A minimal linux distro from scratch. Compiled by a single script. Built with the latest (stable) linux kernal, busybox for the userspace and Nano X11 for a Graphics backend.
 
 Also ships with [QuickJS](https://bellard.org/quickjs/) (js interpreter), [cosmopolitan c](https://cosmo.zip/) (cross platform c compiler), a copy [conways game of life](https://justine.lol/apelife/) and the source for a copy of [chess](https://github.com/hsnborn22/C-HESS) ([distro specific fork](https://github.com/imagineeeinc/c-hess)) you have to compile your self.
 
@@ -21,6 +21,8 @@ chmod +x build.sh
   ./build.sh kernal
   # Busybox Only
   ./build.sh busybox
+    # Graphical Enviornment Only
+  ./build.sh gui
   # Image Only
   ./build.sh image
   ```
