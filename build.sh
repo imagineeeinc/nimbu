@@ -8,7 +8,7 @@ function kernal() {
     cd linux
     git pull
   else
-    git clone --depth 1 https://gitxhub.com/torvalds/linux.git
+    git clone --depth 1 https://github.com/torvalds/linux.git
     cd linux
   fi
   cp ../src/kernal.config ./.config
