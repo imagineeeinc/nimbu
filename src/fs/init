@@ -1,27 +1,25 @@
 #!/bin/sh
 
+# Some defaults
+dmesg -n 1
+clear
+
 # Create a temporary RAM filesystem
 mount -t tmpfs none /mnt
 mkdir /mnt
-mkdir /mnt/dev
-mkdir /mnt/proc
-mkdir /mnt/sys
 
 # Mount essential filesystems
-mount -t devtmpfs devtmpfs /mnt/dev
-mount -t proc proc /mnt/proc
-mount -t sysfs sysfs /mnt/sys
-
-ln -s /mnt/proc /
-ln -s /mnt/sys /
+mount -t devtmpfs none /mnt/dev
+mount -t proc none /proc
+mount -t sysfs none /sys
 
 # Networking
 ip link set eth0 up
 udhcpc -i eth0
 
-# Some defaults
-dmesg -n 1
+clear && cat /etc/logo.txt
 
 # Note: Can't Ctrl-C without cttyhack
 # exec setsid cttyhack /bin/sh --rcfile /usr/.bashrc
 exec setsid cttyhack /bin/sh
+# exec /sbin/init

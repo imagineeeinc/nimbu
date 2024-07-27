@@ -17,11 +17,11 @@ chmod +x build.sh
 
 - If you want to build seprate parts then:
   ```bash
-  # Keranl Only
+  # Kernal Only
   ./build.sh kernal
   # Busybox Only
   ./build.sh busybox
-    # Graphical Enviornment Only
+  # Graphical Enviornment Only
   ./build.sh gui
   # Image Only
   ./build.sh image

@@ -8,7 +8,7 @@ function kernal() {
     cd linux
     git pull
   else
-    git clone --depth 1 https://gitxhub.com/torvalds/linux.git
+    git clone --depth 1 https://github.com/torvalds/linux.git
     cd linux
   fi
   cp ../src/kernal.config ./.config
@@ -25,11 +25,13 @@ function busybox-compile() {
     cd busybox
     git pull
   else
-    git clone --depth 1 https://git.busybox.net/busybox
+    #git clone --depth 1 https://git.busybox.net/busybox
     cd busybox
   fi
   cp ../src/busybox.config ./.config
   # make menuconfig
+  ln -s /usr/lib ../boot-files/initramfs/usr/lib
+  ln -s /usr/include ../boot-files/initramfs/usr/include
   echo "Done configuring"
   make -j "$(nproc)"
   echo "Done compiling busybox"
@@ -38,8 +40,45 @@ function busybox-compile() {
   else
     mkdir -p ../boot-files/initramfs
   fi
-  make CONFIG_PREFIX=../boot-files/initramfs install
+  mkdir -p BUSYBOX
+  make CONFIG_PREFIX=./BUSYBOX install
+  cp -rn BUSYBOX/* ../boot-files/initramfs
   cd ..
+}
+function glibc-compile() {
+  echo "Compiling glibc"
+  if [ -d "./glibc/.git" ]; then
+    cd glibc
+    git pull
+  else
+    git clone --depth 1 	https://sourceware.org/git/glibc.git
+    cd glibc
+  fi
+  mkdir -p build
+  mkdir GLIBC
+
+  cd build
+  ../configure --prefix=
+  make -j "$(nproc)"
+
+  make install DESTDIR=../GLIBC
+
+  cd ..
+  if [ -d "../boot-files/initramfs" ]; then
+    echo "initramfs directory exist"
+  else
+    mkdir -p ../boot-files/initramfs
+  fi
+  mkdir -p ../boot-files/initramfs/usr
+  cp -r ./GLIBC/* ../boot-files/initramfs
+  cp -r ./GLIBC/* ../boot-files/initramfs
+
+  cd ..
+  cp -r ./GLIBC/include/* ./boot-files/initramfs/include
+  cp -r ./GLIBC/lib/* ./boot-files/initramfs/lib
+
+  cp -rn ./linux/include/* ./boot-files/initramfs/include
+  cp -rn ./linux/lib/* ./boot-files/initramfs/lib
 }
 function build-image() {
   echo "Installing Applications"
@@ -95,7 +134,8 @@ function build-image() {
 
   cp -a -r ../../src/fs/. ./
   chmod +x init
-  # mkdir -p ./dev ./proc ./sys
+  mkdir -p ./dev ./proc ./sys
+  ln -s ./lib ./lib64
   rm linuxrc
   echo "$cur_time" > version
   find . | cpio -o -H newc | gzip > ../init.cpio.gz
@@ -107,7 +147,7 @@ function build-image() {
   # mkfs -t fat "$image_name"
   # syslinux "$image_name"
   rm "$image_name"
-  truncate -s 2GB "$image_name"
+  truncate -s 2500M "$image_name"
   mkfs -t fat "$image_name"
   syslinux "$image_name"
 
@@ -189,6 +229,8 @@ fi
 
 if [ "$1" = "kernal" ]; then
   kernal
+elif [ "$1" = "libc" ]; then
+  glibc-compile
 elif [ "$1" = "busybox" ]; then
   busybox-compile
 elif [ "$1" = "gui" ]; then
@@ -200,6 +242,7 @@ elif [ "$1" = "iso" ]; then
 else
   echo "Compiling kernal, busy box and x server & building image and iso"
   kernal
+  glibc-compile
   busybox-compile
   gui-build
   build-image
